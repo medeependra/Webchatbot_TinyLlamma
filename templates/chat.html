@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-color: #1e1e1e;
+            --text-color: #e0e0e0;
+            --primary-color: #bb86fc;
+            --secondary-color: #03dac6;
+            --border-color: #333;
+            --user-message: #2a3a4a;
+            --bot-message: #1a2a3a;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .chat-container {
+            background-color: var(--card-color);
+            padding: 25px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 700px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 12px;
+            resize: none;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 16px;
+            background-color: #2d2d2d;
+            color: var(--text-color);
+            transition: border 0.3s;
+        }
+
+        textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 12px 24px;
+            border: none;
+            background-color: var(--primary-color);
+            color: #121212;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background-color: #9a67cc;
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message-container {
+            margin-top: 30px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) var(--card-color);
+        }
+
+        .message-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .message-container::-webkit-scrollbar-thumb {
+            background-color: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .user {
+            background-color: var(--user-message);
+            color: var(--text-color);
+            margin-bottom: 8px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .bot {
+            background-color: var(--bot-message);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            align-items: center;
+        }
+
+        .clear-btn {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            border: 1px solid var(--secondary-color);
+        }
+
+        .clear-btn:hover {
+            background-color: rgba(3, 218, 198, 0.1);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: var(--secondary-color);
+            font-style: italic;
+            margin: 10px 0;
+        }
+
+        /* Theme toggle switch */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #555;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>AI Chatbot</h1>
+        
+        <form method="post" id="chat-form">
+            <textarea name="prompt" id="user-input" placeholder="Enter your question here..." maxlength="500" required></textarea>
+            <div class="char-count"><span id="char-remaining">500</span> characters remaining</div>
+            <button type="submit" id="submit-btn">Submit</button>
+            <div class="loading" id="loading-indicator">Generating response...</div>
+        </form>
+        
+        <div class="message-container" id="message-container">
+            {% for entry in history %}
+                <div class="message">
+                    <p class="user">You: {{ entry.user }}</p>
+                    <div class="bot">Bot: {{ entry.bot|safe }}</div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="controls">
+            <a href="{{ url_for('clear_chat') }}" class="clear-btn">Clear Chat History</a>
+        </div>
+    </div>
+
+    <script>
+        // Character count for textarea
+        const textarea = document.getElementById('user-input');
+        const charRemaining = document.getElementById('char-remaining');
+        
+        textarea.addEventListener('input', function() {
+            const remaining = 500 - this.value.length;
+            charRemaining.textContent = remaining;
+        });
+
+        // Scroll to bottom of message container
+        function scrollToBottom() {
+            const container = document.getElementById('message-container');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Show loading indicator during form submission
+        document.getElementById('chat-form').addEventListener('submit', function() {
+            document.getElementById('loading-indicator').style.display = 'block';
+            document.getElementById('submit-btn').disabled = true;
+            scrollToBottom();
+        });
+
+        // Initial scroll to bottom if there are messages
+        window.onload = scrollToBottom;
+    </script>
+</body>
+</html>
